@@ -1,6 +1,7 @@
 const url = require('url');
 const http = require('http');
 const httpProxy = require('http-proxy');
+const apiCallback = require('../api/github-auth-callback');
 
 const _proxyServer = httpProxy.createServer({
 	ignorePath: true,
@@ -37,6 +38,17 @@ const vscodeUnpkgProxyHandler = (req, res, vscodeUnpkgMatches) => {
 
 const proxyServer = http.createServer((request, response) => {
 	const urlObj = url.parse(request.url);
+	if (urlObj.pathname.startsWith('/api/sourcegraph')) {
+		return sourcegraphProxyHandler(request, response);
+	}
+
+	if (urlObj.pathname.startsWith('/api/github-auth-callback')) {
+		const parsedUrl = url.parse(request.url, true);
+		request.query = parsedUrl.query;
+		return apiCallback(request, response);
+	}
+
+	// prettier-ignore
 	const vscodeUnpkgMatches = urlObj.pathname.match(/^\/api\/vscode-unpkg\/([^/]+)\/(.*)/);
 	return vscodeUnpkgProxyHandler(request, response, vscodeUnpkgMatches);
 });

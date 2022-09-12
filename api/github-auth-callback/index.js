@@ -5,10 +5,11 @@
 
 const got = require('got');
 
-const CLIENT_ID = process.env.GITHUB_OAUTH_ID || '';
-const CLIENT_SECRET = process.env.GITHUB_OAUTH_SECRET || '';
+const HOST_NAME = 'github.paypal.com';
+const CLIENT_ID = '47c7a48b91fd42410b0d';
+const CLIENT_SECRET = '6e578e8ce9d3ff1b31766051ec472f5205956f6e';
 // allow origins should split by ','
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || '';
+const ALLOWED_ORIGINS = 'http://localhost:5000';
 
 // return the data to the opener window by postMessage API,
 // and close current window then
@@ -33,9 +34,11 @@ const UNKNOWN_ERROR = {
 module.exports = async (req, res) => {
 	const code = req.query.code;
 	const sendResponseHtml = (status, data) => {
-		res.status(status);
+		res.writeHead(status);
 		const responseData = { type: 'authorizing', payload: data };
-		res.send(getResponseHtml(JSON.stringify(responseData)));
+		res.write(getResponseHtml(JSON.stringify(responseData)));
+		console.log(getResponseHtml(JSON.stringify(responseData)));
+		res.end();
 	};
 
 	if (!code) {
@@ -44,7 +47,7 @@ module.exports = async (req, res) => {
 
 	try {
 		// https://docs.github.com/en/developers/apps/authorizing-oauth-apps#2-users-are-redirected-back-to-your-site-by-github
-		const response = await got.post('https://github.com/login/oauth/access_token', {
+		const response = await got.post('https://github.paypal.com/login/oauth/access_token', {
 			json: { client_id: CLIENT_ID, client_secret: CLIENT_SECRET, code },
 			responseType: 'json',
 		});
